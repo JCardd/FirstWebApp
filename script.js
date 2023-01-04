@@ -15,13 +15,41 @@ class Item {
   }
 }
 
+//checking local storage for saved values on totalPrice and cart
+const totalPriceStorage = localStorage.getItem("totalPrice");
+if (totalPriceStorage !== null) {
+  totalPrice = parseInt(totalPriceStorage);
+}
+
+//list of objects that need to be converted to an Item
+const cartStorage = localStorage.getItem("cart");
+if (cartStorage !== null) {
+  //transforming each item in the list back into an Item object
+  let newCart = [];
+
+  JSON.parse(cartStorage).forEach((item) => {
+    newCart.push(new Item(item.name, item.price));
+  })
+
+  cart = newCart;
+}
+
+refreshUI();
+
+//updating the storage when adding or deleting an item
+function updateStorage () {
+  localStorage.setItem("totalPrice", totalPrice);
+  localStorage.setItem("cart", JSON.stringify(cart));
+}
+
+
 //draw the UI based on the total price and 
 //whatever is inside the cart
 function refreshUI() {
   totalPriceElement.innerText = `Total Price: $${totalPrice} | Total # of items: ${cart.length}`;
   parentListElement.innerHTML = "";//clears out the items in the list
   console.log(cart);
-  
+
   cart.forEach((item, index) => {
     const listElement = document.createElement("li");
     const textNode = document.createTextNode(`${item.name} - $${item.price} `);
@@ -39,6 +67,7 @@ function refreshUI() {
     deleteButton.addEventListener("click", () => {
       cart.splice(index, 1)
       totalPrice -= item.price;
+      updateStorage();
       refreshUI();
     });
   })
@@ -55,6 +84,10 @@ function addItem(form) {
   totalPrice += parseInt(itemPrice);
   const item = new Item(itemName, parseInt(itemPrice));
   cart.push(item);
+
+  //update storage
+  updateStorage();
+
 
   //call this function b/c the state of our application has changed
   refreshUI();
